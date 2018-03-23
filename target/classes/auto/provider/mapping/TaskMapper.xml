@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="auto.provider.dao.TaskMapper">
+  <resultMap id="BaseResultMap" type="auto.provider.model.Task">
+    <id column="task_tag" jdbcType="VARCHAR" property="taskTag" />
+    <result column="task_name" jdbcType="VARCHAR" property="taskName" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="task_dir" jdbcType="VARCHAR" property="taskDir" />
+    <result column="device_serial" jdbcType="VARCHAR" property="deviceSerial" />
+    <result column="upload_name" jdbcType="VARCHAR" property="uploadName" />
+    <result column="script_name" jdbcType="VARCHAR" property="scriptName" />
+    <result column="result" jdbcType="VARCHAR" property="result" />
+    <result column="apk_name" jdbcType="VARCHAR" property="apkName" />
+    <result column="apk_name2" jdbcType="VARCHAR" property="apkName2" />
+    <result column="pkg_name" jdbcType="VARCHAR" property="pkgName" />
+    <result column="model" jdbcType="VARCHAR" property="model" />
+    <result column="method" jdbcType="VARCHAR" property="method" />    
+    <result column="submit_time" jdbcType="TIMESTAMP" property="submitTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    task_tag, task_name, user_name, device_serial, script_name, result, apk_name,apk_name2,pkg_name,model,method,submit_time
+  </sql>
+  <select id="selectByUserName" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from task
+    where user_name = #{userName,jdbcType=VARCHAR} order by submit_time desc
+  </select>
+    <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from task
+    where task_tag = #{taskTag,jdbcType=VARCHAR}
+  </select>
+  <select id="selectRun" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from task where result="running"
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from task
+    where task_tag = #{taskTag,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="auto.provider.model.Task">
+    insert into task (task_tag, task_name, user_name, 
+      device_serial, script_name, result, 
+      apk_name,method,task_dir,upload_name,apk_name2,pkg_name,model)
+    values (#{taskTag,jdbcType=VARCHAR}, #{taskName,jdbcType=VARCHAR}, #{userName,jdbcType=VARCHAR}, 
+      #{deviceSerial,jdbcType=VARCHAR}, #{scriptName,jdbcType=VARCHAR}, #{result,jdbcType=VARCHAR}, 
+      #{apkName,jdbcType=VARCHAR},#{method,jdbcType=VARCHAR},#{taskDir,jdbcType=VARCHAR},#{uploadName,jdbcType=VARCHAR},#{apkName2,jdbcType=VARCHAR},#{pkgName,jdbcType=VARCHAR},#{model,jdbcType=VARCHAR})
+  </insert>
+ 
+  
+  <update id="updateResult" parameterType="auto.provider.model.Task">
+    update task
+    set result = #{result,jdbcType=VARCHAR}
+    where task_tag = #{taskTag,jdbcType=VARCHAR}
+  </update>
+</mapper>

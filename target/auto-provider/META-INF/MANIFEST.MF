@@ -1,0 +1,28 @@
+Manifest-Version: 1.0
+Built-By: ThinkPad
+Build-Jdk: 1.7.0_67
+Class-Path: . lib/spring-websocket-4.0.2.RELEASE.jar lib/spring-messag
+ ing-4.0.2.RELEASE.jar lib/spring-beans-4.0.2.RELEASE.jar lib/jsf-api-
+ 2.0.4-b09.jar lib/jsf-impl-2.0.4-b09.jar lib/dubbo-2.5.3.jar lib/java
+ ssist-3.15.0-GA.jar lib/netty-3.2.5.Final.jar lib/zkclient-0.5.jar li
+ b/zookeeper-3.4.6.jar lib/jline-0.9.94.jar lib/netty-3.7.0.Final.jar 
+ lib/jackson-core-asl-1.9.13.jar lib/jackson-mapper-asl-1.9.13.jar lib
+ /jackson-annotations-2.8.8.jar lib/jackson-databind-2.8.8.jar lib/jac
+ kson-core-2.8.8.jar lib/jstl-1.2.jar lib/jsr250-api-1.0.jar lib/mysql
+ -connector-java-5.1.30.jar lib/spring-data-redis-1.6.4.RELEASE.jar li
+ b/spring-tx-4.1.9.RELEASE.jar lib/spring-oxm-4.1.9.RELEASE.jar lib/sp
+ ring-context-support-4.1.9.RELEASE.jar lib/jcl-over-slf4j-1.7.13.jar 
+ lib/jedis-2.4.1.jar lib/commons-pool2-2.0.jar lib/ehcache-2.8.2.jar l
+ ib/spring-webmvc-4.0.2.RELEASE.jar lib/spring-web-4.0.2.RELEASE.jar l
+ ib/spring-context-4.0.2.RELEASE.jar lib/spring-core-4.3.3.RELEASE.jar
+  lib/commons-logging-1.2.jar lib/spring-aop-4.3.9.RELEASE.jar lib/spr
+ ing-expression-4.3.9.RELEASE.jar lib/mybatis-3.2.8.jar lib/mybatis-sp
+ ring-1.2.2.jar lib/commons-dbcp-1.2.2.jar lib/commons-collections-3.2
+ .1.jar lib/commons-lang3-3.4.jar lib/commons-pool-1.6.jar lib/spring-
+ jdbc-4.1.6.RELEASE.jar lib/aspectjweaver-1.8.9.jar lib/aspectjrt-1.8.
+ 9.jar lib/aopalliance-1.0.jar lib/log4j-1.2.17.jar lib/slf4j-api-1.6.
+ 0.jar lib/slf4j-log4j12-1.6.1.jar
+Created-By: Apache Maven 3.2.3
+Main-Class: com.alibaba.dubbo.container.Main
+Archiver-Version: Plexus Archiver
+

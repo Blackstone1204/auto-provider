@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context-4.0.xsd
+            http://code.alibabatech.com/schema/dubbo  
+            http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+    <dubbo:application name="DubboProvider"/>
+    <dubbo:registry protocol="zookeeper" address="${register_address}"/>
+    <dubbo:protocol name="dubbo" port="${call_address_port}"/>
+
+    <dubbo:service interface="auto.provider.service.IUserService" ref="userService" protocol="dubbo"/>
+    <dubbo:service interface="auto.provider.service.IDeviceService" ref="deviceService" protocol="dubbo"/>
+    <dubbo:service interface="auto.provider.service.ITaskService" ref="taskService" protocol="dubbo"/>
+    <dubbo:service interface="auto.provider.service.ISubTaskService" ref="subTaskService" protocol="dubbo"/>
+    <dubbo:service interface="auto.provider.service.IAppiumServerService" ref="appiumServerService" protocol="dubbo"/>
+    <dubbo:service interface="auto.provider.service.IAppiumAsynService" ref="appiumAsynService" protocol="dubbo"/>
+    <dubbo:service interface="auto.provider.service.IAppiumSyncService" ref="appiumSyncService" protocol="dubbo"/>
+    <dubbo:service interface="auto.provider.service.IProjectionService" ref="projectionService" protocol="dubbo"/>
+    <dubbo:service interface="auto.provider.service.IRecordService" ref="recordService" protocol="dubbo"/>   
+    
+</beans>

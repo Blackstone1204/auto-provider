@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="auto.provider.dao.RecordMapper">
+  <resultMap id="BaseResultMap" type="auto.provider.model.Record">
+    <id column="record_id" jdbcType="INTEGER" property="recordId" />
+    <result column="record_name" jdbcType="VARCHAR" property="recordName" />
+    <result column="tip" jdbcType="VARCHAR" property="tip" />
+    <result column="command_str" jdbcType="VARCHAR" property="commandStr" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="method" jdbcType="INTEGER" property="method" />
+    <result column="serial" jdbcType="VARCHAR" property="serial" />
+    <result column="screenshot_location" jdbcType="VARCHAR" property="screenshotLocation" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    record_id, record_name, tip, command_str, user_name ,method,serial,screenshot_location
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from record
+    where record_id = #{recordId,jdbcType=INTEGER}
+  </select>
+  
+  <select id="selectRecord" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from record where user_name= #{userName,jdbcType=VARCHAR}
+    order by insert_time desc
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from record
+    where record_id = #{recordId,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="auto.provider.model.Record">
+    insert into record (record_id, record_name, tip, 
+      command_str, user_name,method,screenshot_location,serial)
+    values (#{recordId,jdbcType=INTEGER}, #{recordName,jdbcType=VARCHAR}, #{tip,jdbcType=VARCHAR}, 
+      #{commandStr,jdbcType=VARCHAR}, #{userName,jdbcType=VARCHAR},#{method,jdbcType=INTEGER},#{screenshotLocation,jdbcType=VARCHAR},#{serial,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="auto.provider.model.Record">
+    insert into record
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="recordId != null">
+        record_id,
+      </if>
+      <if test="recordName != null">
+        record_name,
+      </if>
+      <if test="tip != null">
+        tip,
+      </if>
+      <if test="commandStr != null">
+        command_str,
+      </if>
+      <if test="userName != null">
+        user_name,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="recordId != null">
+        #{recordId,jdbcType=INTEGER},
+      </if>
+      <if test="recordName != null">
+        #{recordName,jdbcType=VARCHAR},
+      </if>
+      <if test="tip != null">
+        #{tip,jdbcType=VARCHAR},
+      </if>
+      <if test="commandStr != null">
+        #{commandStr,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="auto.provider.model.Record">
+    update record
+    <set>
+      <if test="recordName != null">
+        record_name = #{recordName,jdbcType=VARCHAR},
+      </if>
+      <if test="tip != null">
+        tip = #{tip,jdbcType=VARCHAR},
+      </if>
+      <if test="commandStr != null">
+        command_str = #{commandStr,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where record_id = #{recordId,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="auto.provider.model.Record">
+    update record
+    set record_name = #{recordName,jdbcType=VARCHAR},
+      tip = #{tip,jdbcType=VARCHAR},
+      command_str = #{commandStr,jdbcType=VARCHAR},
+      user_name = #{userName,jdbcType=VARCHAR}
+    where record_id = #{recordId,jdbcType=INTEGER}
+  </update>
+</mapper>

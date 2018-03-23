@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="auto.provider.dao.SubTaskMapper">
+  <resultMap id="BaseResultMap" type="auto.provider.model.SubTask">
+    <id column="sub_tag" jdbcType="VARCHAR" property="subTag" />
+    <result column="task_tag" jdbcType="VARCHAR" property="taskTag" />
+    <result column="serial" jdbcType="VARCHAR" property="serial" />
+    <result column="model" jdbcType="VARCHAR" property="model" />
+    <result column="script_name" jdbcType="VARCHAR" property="scriptName" />
+    <result column="result" jdbcType="VARCHAR" property="result" />
+    <result column="device_log" jdbcType="VARCHAR" property="deviceLog" />
+    <result column="cpu_data" jdbcType="VARCHAR" property="cpuData" />
+    <result column="memory_data" jdbcType="VARCHAR" property="memoryData" />
+    <result column="start_time" jdbcType="TIMESTAMP" property="startTime" />
+    <result column="end_time" jdbcType="TIMESTAMP" property="endTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    sub_tag, task_tag, serial,model,result, device_log, cpu_data, memory_data, start_time, 
+    end_time
+  </sql>
+  <select id="selectByTaskTag" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from sub_task
+    where task_tag= #{taskTag,jdbcType=VARCHAR} order by end_time desc,result asc
+  </select>
+  <delete id="deleteBySubTag" parameterType="java.lang.String">
+    delete from sub_task
+    where sub_tag = #{subTag,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="auto.provider.model.SubTask">
+    insert into sub_task (sub_tag, task_tag, serial,model,
+      script_name,result, device_log, cpu_data, 
+      memory_data
+      )
+    values (#{subTag,jdbcType=VARCHAR}, #{taskTag,jdbcType=VARCHAR}, #{serial,jdbcType=VARCHAR},#{model,jdbcType=VARCHAR}, 
+      #{scriptName,jdbcType=VARCHAR},#{result,jdbcType=VARCHAR}, #{deviceLog,jdbcType=VARCHAR}, #{cpuData,jdbcType=VARCHAR}, 
+      #{memoryData,jdbcType=VARCHAR}
+      )
+  </insert>
+  
+  
+  <update id="updateResultBySubTag"  parameterType="auto.provider.model.SubTask">
+    update sub_task
+    set result = #{result,jdbcType=VARCHAR} 
+    where sub_tag = #{subTag,jdbcType=VARCHAR}
+  </update>
+</mapper>

@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<mapper namespace="auto.provider.dao.DeviceMapper">
+  <resultMap id="BaseResultMap" type="auto.provider.model.Device">
+    <id column="serial" jdbcType="VARCHAR" property="serial" /> 
+    <result column="md5" jdbcType="VARCHAR" property="md5" /> 
+    <result column="resolution" jdbcType="INTEGER" property="resolution" />
+    <result column="port" jdbcType="INTEGER" property="port" />
+    <result column="bp_port" jdbcType="INTEGER" property="bpPort" />
+    <result column="view_port" jdbcType="INTEGER" property="viewPort" />
+    <result column="mini_port" jdbcType="INTEGER" property="miniPort" />
+    <result column="touch_port" jdbcType="INTEGER" property="touchPort" />
+    <result column="node" jdbcType="VARCHAR" property="node" />
+    <result column="model" jdbcType="VARCHAR" property="model" />
+    <result column="brand" jdbcType="VARCHAR" property="brand" />
+    <result column="version" jdbcType="VARCHAR" property="version" />
+    <result column="sdk" jdbcType="VARCHAR" property="sdk" />
+    <result column="imsi" jdbcType="VARCHAR" property="imsi" />
+    <result column="imei" jdbcType="VARCHAR" property="imei" />
+    <result column="abi" jdbcType="VARCHAR" property="abi" />
+    <result column="url" jdbcType="VARCHAR" property="url" />
+    <result column="has_get_root" jdbcType="INTEGER" property="hasGetRoot" />
+    <result column="insert_time" jdbcType="TIMESTAMP" property="insertTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    serial,md5,resolution,port,bp_port,view_port,mini_port,touch_port,node, model, brand, version,sdk, imsi, imei, abi,url,has_get_root, insert_time
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from device
+    where serial = #{serial,jdbcType=VARCHAR}
+  </select>
+  
+  <select id="selectAll" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from device
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from device
+    where serial = #{serial,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="auto.provider.model.Device">
+    insert into device (serial,md5,resolution,port,bp_port,view_port,mini_port,touch_port,node, 
+      model, brand, version,sdk,
+      imsi, imei,abi,url,has_get_root
+      )
+    values (#{serial,jdbcType=VARCHAR},#{md5,jdbcType=VARCHAR},#{resolution,jdbcType=VARCHAR},#{port,jdbcType=INTEGER}, #{bpPort,jdbcType=INTEGER},#{viewPort,jdbcType=INTEGER},#{miniPort,jdbcType=INTEGER},#{touchPort,jdbcType=INTEGER},#{node,jdbcType=VARCHAR}, 
+      #{model,jdbcType=VARCHAR}, #{brand,jdbcType=VARCHAR}, #{version,jdbcType=VARCHAR}, #{sdk,jdbcType=VARCHAR}, 
+      #{imsi,jdbcType=VARCHAR}, #{imei,jdbcType=VARCHAR}, #{abi,jdbcType=VARCHAR}, #{url,jdbcType=VARCHAR},#{hasGetRoot,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="auto.provider.model.Device">
+    insert into device
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="serial != null">
+        serial,
+      </if>
+      <if test="bpPort != null">
+        bp_port,
+      </if>
+      <if test="node != null">
+        node,
+      </if>
+      <if test="model != null">
+        model,
+      </if>
+      <if test="brand != null">
+        brand,
+      </if>
+      <if test="version != null">
+        version,
+      </if>
+      <if test="imsi != null">
+        imsi,
+      </if>
+      <if test="imei != null">
+        imei,
+      </if>
+      <if test="hasGetRoot != null">
+        has_get_root,
+      </if>
+      <if test="insertTime != null">
+        insert_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="serial != null">
+        #{serial,jdbcType=VARCHAR},
+      </if>
+      <if test="bpPort != null">
+        #{bpPort,jdbcType=INTEGER},
+      </if>
+      <if test="node != null">
+        #{node,jdbcType=VARCHAR},
+      </if>
+      <if test="model != null">
+        #{model,jdbcType=VARCHAR},
+      </if>
+      <if test="brand != null">
+        #{brand,jdbcType=VARCHAR},
+      </if>
+      <if test="version != null">
+        #{version,jdbcType=VARCHAR},
+      </if>
+      <if test="imsi != null">
+        #{imsi,jdbcType=VARCHAR},
+      </if>
+      <if test="imei != null">
+        #{imei,jdbcType=VARCHAR},
+      </if>
+      <if test="hasGetRoot != null">
+        #{hasGetRoot,jdbcType=INTEGER},
+      </if>
+      <if test="insertTime != null">
+        #{insertTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="auto.provider.model.Device">
+    update device
+    <set>
+      <if test="bpPort != null">
+        bp_port = #{bpPort,jdbcType=INTEGER},
+      </if>
+      <if test="node != null">
+        node = #{node,jdbcType=VARCHAR},
+      </if>
+      <if test="model != null">
+        model = #{model,jdbcType=VARCHAR},
+      </if>
+      <if test="brand != null">
+        brand = #{brand,jdbcType=VARCHAR},
+      </if>
+      <if test="version != null">
+        version = #{version,jdbcType=VARCHAR},
+      </if>
+      <if test="imsi != null">
+        imsi = #{imsi,jdbcType=VARCHAR},
+      </if>
+      <if test="imei != null">
+        imei = #{imei,jdbcType=VARCHAR},
+      </if>
+      <if test="hasGetRoot != null">
+        has_get_root = #{hasGetRoot,jdbcType=INTEGER},
+      </if>
+      <if test="insertTime != null">
+        insert_time = #{insertTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where serial = #{serial,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="auto.provider.model.Device">
+    update device
+    set md5=#{md5,jdbcType=VARCHAR},
+      resolution=#{resolution,jdbcType=VARCHAR},
+      port = #{port,jdbcType=INTEGER},
+      bp_port = #{bpPort,jdbcType=INTEGER},
+      view_port = #{viewPort,jdbcType=INTEGER},
+      mini_port = #{miniPort,jdbcType=INTEGER},
+      touch_port = #{touchPort,jdbcType=INTEGER},
+      node = #{node,jdbcType=VARCHAR},
+      model = #{model,jdbcType=VARCHAR},
+      brand = #{brand,jdbcType=VARCHAR},
+      version = #{version,jdbcType=VARCHAR},
+      sdk = #{sdk,jdbcType=VARCHAR},
+      imsi = #{imsi,jdbcType=VARCHAR},
+      imei = #{imei,jdbcType=VARCHAR},
+      abi = #{abi,jdbcType=VARCHAR},
+      url = #{url,jdbcType=VARCHAR},
+      has_get_root = #{hasGetRoot,jdbcType=INTEGER}
+     <!--  insert_time = #{insertTime,jdbcType=TIMESTAMP}-->
+    where serial = #{serial,jdbcType=VARCHAR}
+  </update>
+  
+  <select id="getMaxPort" parameterType="java.lang.String" resultType="java.lang.Integer">
+  SELECT MAX(port) from device
+  </select>
+  <select id="getMaxBpPort" parameterType="java.lang.String" resultType="java.lang.Integer">
+  SELECT MAX(bp_port) from device
+  </select>
+  
+  <select id="getDeviceCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+  SELECT count(*) from device
+  </select>
+  
+</mapper>

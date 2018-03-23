@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="auto.provider.dao.UserMapper">
+  <resultMap id="BaseResultMap" type="auto.provider.model.User">
+    <id column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="role_id" jdbcType="VARCHAR" property="roleId" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    user_name, password, role_id
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from user
+    where user_name = #{userName,jdbcType=VARCHAR}
+  </select>
+  <select id="selectByUserNamePassword" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from user
+    where user_name = #{userName,jdbcType=VARCHAR} and password=#{password,jdbcType=VARCHAR}
+  </select> 
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from user
+    where user_name = #{userName,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="auto.provider.model.User">
+    insert into user (user_name, password, role_id
+      )
+    values (#{userName,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, #{roleId,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="auto.provider.model.User">
+    insert into user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="userName != null">
+        user_name,
+      </if>
+      <if test="password != null">
+        password,
+      </if>
+      <if test="roleId != null">
+        role_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="roleId != null">
+        #{roleId,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="auto.provider.model.User">
+    update user
+    <set>
+      <if test="password != null">
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="roleId != null">
+        role_id = #{roleId,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where user_name = #{userName,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="auto.provider.model.User">
+    update user
+    set password = #{password,jdbcType=VARCHAR},
+      role_id = #{roleId,jdbcType=VARCHAR}
+    where user_name = #{userName,jdbcType=VARCHAR}
+  </update>
+</mapper>
