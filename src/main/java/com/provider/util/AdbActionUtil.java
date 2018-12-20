@@ -11,6 +11,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import auto.provider.model.AdbConnector;
+import auto.provider.model.MyPoint;
 import auto.provider.model.SpringContextHolder;
 import auto.provider.service.IDeviceService;
 
@@ -49,20 +50,20 @@ public class AdbActionUtil {
 		filterMap.put("menu","");
 	}
 	
-	public static void perform(String serial,String actionName,String args,String sw){
+	public static void perform(String serial,String actionName,String args,String sw,boolean isPlayback){
 		try {
-			
-			
 			IDeviceService deviceService=SpringContextHolder.getBean("deviceService");
 			String res=deviceService.findDeviceBySerial(serial).getResolution();
 			
 			int dwidth=Integer.parseInt(res.split("x")[0])>Integer.parseInt(res.split("x")[1])?Integer.parseInt(res.split("x")[1]):Integer.parseInt(res.split("x")[0]);
 	        
-			double bs=dwidth/Integer.parseInt(sw);
+			double bs=(double)dwidth/(double)Integer.parseInt(sw);
 			
 			
 			String[] as=args.split(";");
 			int count=args.split(";").length;
+			
+			//
 			
 			String f=map.get(actionName);		
 
@@ -75,11 +76,16 @@ public class AdbActionUtil {
 				
 				//过滤文本输入事件
 				if(!"input".equals(actionName)){
+					
 					for(int k=1;k<count;k++){	
-						String v=String.valueOf(Double.valueOf(as[k])*Double.valueOf(bs));
+						
+						//非回放状态 坐标需要映射放大
+						//回放状态 无需放大
+						String v=isPlayback?as[k]:String.valueOf(Double.valueOf(as[k])*(double)dwidth/Double.parseDouble(sw));
 						f=f+" "+v;
 				
 					}
+
 					
 				}else{
 					for(int k=1;k<count;k++){		

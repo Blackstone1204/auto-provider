@@ -3,6 +3,7 @@
  */
 package com.provider.util;
 
+import java.awt.Point;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -11,10 +12,12 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +27,7 @@ import org.springframework.stereotype.Component;
 import auto.provider.dao.RecordMapper;
 import auto.provider.model.Device;
 import auto.provider.model.Mode;
+import auto.provider.model.MyPoint;
 import auto.provider.model.Record;
 import auto.provider.model.SpringContextHolder;
 import auto.provider.service.IDeviceService;
@@ -34,6 +38,8 @@ import auto.provider.service.IRecordService;
  * @author BlackStone
  *
  */
+
+@Component
 public class RecordUtil {
 	/** 
 	 * @ClassName: RecordUtil 
@@ -41,10 +47,23 @@ public class RecordUtil {
 	 * @date 2017年11月30日 上午11:49:36 
 	 * 
 	 */
+
+	public static String[] black= {"cn.fingard.rhfappapi.app:id/iv_bank_icon"};
+	
+	private PageUtil pu;
 	private static Logger log=Logger.getLogger(RecordUtil.class);
 	//private static Map<String,String> statusMap=new HashMap<String, String>();
 	private static Map<String,List<String>> recordMap=new HashMap<String, List<String>>();
 	private static Map<String,Integer> stepMap=new HashMap<String, Integer>();
+	
+	public RecordUtil(PageUtil pu) {
+		this.pu=pu;
+
+		
+	}
+	
+
+	
 	
 	
 	
@@ -57,6 +76,11 @@ public class RecordUtil {
 		Record r=new Record();
 		String str="";
 		List<String> commands=this.getCommands(userName);
+		
+		if(null==commands) {
+			log.warn("录入的步骤数=0 直接返回不如库...");
+			return;
+		}
 		for(String command:commands){
 			str+=command+",";
 			
@@ -75,6 +99,7 @@ public class RecordUtil {
 
 		//
 		recordReset(userName);
+	
 		
 	}
 //	public  void start(String userName){
@@ -92,13 +117,69 @@ public class RecordUtil {
 	
 	
 	//录制命令保存
-	public void actionRecord(String userName,String command){
-		
+	public void  actionRecord(String userName,String command,String serial,String sw){
+
+		//
 		List<String> current= recordMap.get(userName)==null?new ArrayList<String>():recordMap.get(userName);
-		current.add(command);
+		//特殊处理wait指令
+		
+		String actionName=command.split(";")[0];
+		
+		List<String> transform=new ArrayList<>();
+		transform.add("touch");
+		transform.add("longtouch");
+		transform.add("wait");
+		
+		if(transform.contains(actionName)) {
+				
+			IDeviceService deviceService=SpringContextHolder.getBean("deviceService");
+			String res=deviceService.findDeviceBySerial(serial).getResolution();
+			
+			int dwidth=Integer.parseInt(res.split("x")[0])>Integer.parseInt(res.split("x")[1])?Integer.parseInt(res.split("x")[1]):Integer.parseInt(res.split("x")[0]);
+	        
+			
+			int x=Integer.parseInt(command.split(";")[1]);
+			int y=Integer.parseInt(command.split(";")[2]);
+			
+			double nX=(double)dwidth*(double)x/Double.parseDouble(sw);
+			double nY=(double)dwidth*(double)y/Double.parseDouble(sw);
+		    
+			log.info("解析web端所传坐标 =>"+x+"x"+y+"@"+nX+"x"+nY);
+			MyPoint point=new MyPoint(nX,nY);
+			
+			if(null==pu) {
+				log.error("pu对象空  录制略过该步骤=>"+command);
+				return;
+			}
+			
+			String xpath=pu.searchElementXPathByPoint(point);
+			
+	
+			String packageName=pu.getPackageName();
+			String md5=pu.getPageMd5();
+			String express=String.format("%s_%s_%s",packageName,md5,xpath);
+			
+			log.info(String.format("解析结果..xpath=%s",xpath));
+			
+			command=actionName+";"+express;
+			//xpath唯一指向性验证
+			if(pu.isUniqueXpath(xpath)) {
+				log.warn(String.format("xpath指向不唯一 xpath=%s",xpath));
+			}
+			//touch longtouch事件做click校验
+			if(actionName.contains("touch")&&!pu.xpathCheckClickable(xpath))
+			{
+				//command="";
+				log.warn("touch事件 xpath clickable规则验证失败 ..");
+			}
+			
+		}
+		
+		
+		if(command.length()>0)current.add(command);
+		
 		recordMap.put(userName, current);
-		
-		
+
 	}
 	
 	//获取录制脚本
@@ -108,73 +189,79 @@ public class RecordUtil {
 		
 	}
 	
+	
+	
 	//重置
 	public void recordReset(String userName){
 		recordMap.remove(userName);
 		
 	}
+
 	
+	public boolean delUserRecordLast(String userName) {
+		boolean f=false;
+		List<String> lst=this.getCommands(userName);
+		String cmd=lst.get(lst.size()-1);
+		log.info("用户 "+userName+"删除步骤=>"+cmd);
+		lst.remove(lst.size()-1);
+		recordMap.put(userName, lst);
+		return true;
+		
+	}
 	
 	//脚本回放
-	public Map<String,Object> playback(String serial,String userName,int recordId,String sw,String time,String userDir){
+	public Map<String,Object> playback(String serial,String userName,int recordId,String sw,String time){
 	
 		//执行.record脚本
+		
+		long start=System.currentTimeMillis();
 
 		IDeviceService ds=SpringContextHolder.getBean("deviceService");
 		IRecordService recordService=SpringContextHolder.getBean("recordService");
 		IProjectionService projectionService=SpringContextHolder.getBean("projectionService");
 		String commandStr=recordService.getCommandsByRecordId(recordId).getCommandStr();
 		
-		String[] commands=commandStr.split(",");
-
-		for(String command:commands){
-			
-			if(command.length()==0)continue;
-			
-			//log.info(String.format("commmand=%s",command));
-			
-			String[] as=command.split(";");
-			int len=as.length;
-			String actionName=as[0];
-			String args="";
-			
-			for(int k=1;k<len;k++){
-				//log.info(String.format("index=%s v=%s",k,as[k]));
-				args+=";"+as[k];
-				
-			}
-			
-			log.info(String.format("开始回放脚本[serial=%s actionName=%s args=%s sw=%s]",serial, actionName, args, sw));
-			
-			projectionService.actionExecution(serial,userName,actionName, args, sw,true,false,new Mode("no easy and strict"),time);
-			
-			
-		}
+		log.info(String.format("开始回放脚本 id=%s 设备号=%s 动作=%s  sw=%s..",recordId,serial, "playback", sw));
 		
+		String msg=projectionService.actionExecution(serial,userName,"playback",commandStr, sw,true,false,new Mode("not easy and strict"),time);
+	
+		long end=System.currentTimeMillis();
+		double spend=(double)(end-start)/1000.0;
+		
+		log.info("录制退出 花费 "+spend+" seconds");
 		
 	//分析结果
 		Map<String,Object> resultMap=new HashMap<String,Object>();
-		Record record=recordService.getCommandsByRecordId(recordId);
-		String fromLoc=record.getScreenshotLocation();
-		String toLoc=userDir+File.separator+userName+File.separator+"pointer"+File.separator+"playback"+File.separator+serial+File.separator+time;
-		
-		boolean flag=this.getPlayBackResult(fromLoc, toLoc);
-		log.info(String.format("回放结果分析[结果=%s 比较 %s %s]",flag,fromLoc,toLoc));
+//		Record record=recordService.getCommandsByRecordId(recordId);
+//		String fromLoc=record.getScreenshotLocation();
+//		String toLoc=userDir+File.separator+userName+File.separator+"pointer"+File.separator+"playback"+File.separator+serial+File.separator+time;
+//		
+//		boolean flag=this.getPlayBackResult(fromLoc, toLoc);
+//		log.info(String.format("回放结果分析[结果=%s 比较 %s %s]",flag,fromLoc,toLoc));
 		
 		Device device=ds.findDeviceBySerial(serial);
-		
 		String model=device==null?"无法获取":device.getModel();
 		
-		
-		resultMap.put("result",flag);
+//		resultMap.put("result",flag);
+		resultMap.put("result",msg.contains("正常退出")?true:false);
 		resultMap.put("model", model);
-		
+		resultMap.put("msg",msg);
+		resultMap.put("spend",spend);
+	
 		return resultMap;
 	
 		
 
 		
 		
+		
+	}
+	
+	public void confirmUIOK(int cnt) {
+		while(cnt>0) {
+			pu.rePullUI();
+			
+		}
 		
 	}
 	
@@ -288,5 +375,8 @@ public class RecordUtil {
 		return timeStr;
 	}
 	
+	public static List<String> getBlack(){
+		return Arrays.asList(black);
+	}
 	
 }

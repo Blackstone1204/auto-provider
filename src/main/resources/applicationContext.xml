@@ -55,6 +55,7 @@
 
 <!-- 定时任务配置 -->
 <task:annotation-driven/>  
+
 <context:annotation-config/>  
     <bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>  
 <context:component-scan base-package="auto.provider.*"/>       

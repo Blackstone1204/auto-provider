@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 
 import com.provider.util.ImageUtil;
+import com.provider.util.PageUtil;
 import com.provider.util.RecordUtil;
 import com.provider.util.TouchActionUtil;
 import com.provider.util.AdbActionUtil;
@@ -27,6 +28,7 @@ import com.provider.util.AdbActionUtil;
 import auto.provider.model.AdbConnector;
 import auto.provider.model.Device;
 import auto.provider.model.Mode;
+import auto.provider.model.MyPoint;
 import auto.provider.model.Record;
 import auto.provider.model.SpringContextHolder;
 import auto.provider.service.IDeviceService;
@@ -51,10 +53,15 @@ public class ProjectionServiceImpl implements IProjectionService{
 		touchSupportList.add("touch");
 		touchSupportList.add("longtouch");
 		touchSupportList.add("drag");
+		touchSupportList.add("key_back");
+		
 	}
 	
 	//@Autowired
 	private RecordUtil  ru;
+	
+	//@Autowired 
+	private PageUtil pu;
 	
 	@Value("${node_dir}") private String nodeDir;
 	@Value("${tool_dir}") private String toolDir;
@@ -121,44 +128,125 @@ public class ProjectionServiceImpl implements IProjectionService{
 /**
  * 触屏动作模拟
  */
-	public void actionExecution(String serial,String userName,String actionName,String args,String sw,boolean isPlayBack,boolean isRecording,Mode mode,String time){
+	public String actionExecution(String serial,String userName,String actionName,String args,String sw,boolean isPlayBack,boolean isRecording,Mode mode,String time){
 		
-		if(isPlayBack){
-			try {
-				TimeUnit.SECONDS.sleep(3);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		//
+		
+		String msg="等待执行结果..";
+	
+
+
+
+		if(isPlayBack) {
+		
+			String[] commands=args.split(",");
+
+			for(String command:commands){
+				
+				//log.info("数据库取得的指令 "+command);
+				
+				if(command.length()==0)continue;
+				
+				//log.info(String.format("commmand=%s",command));
+				
+				String[] as=command.split(";");
+				int len=as.length;
+				actionName=as[0];
+				String args0="";
+				
+				if("drag".equals(actionName)||"input".equals(actionName)||"wait".equals(actionName)) {
+					
+					for(int k=1;k<len;k++){
+						//log.info(String.format("index=%s v=%s",k,as[k]));
+						args0+=";"+as[k];
+						
+					}
+
+					//touch系列
+				}else if(actionName.contains("key_")) {
+					
+				}
+				else {
+					String[] s=as[1].split("_");
+				
+					String tzm=s[1];//页面特征码
+					String xpath=s[2];
+					int l=s.length;
+					
+					if(l>3) {
+						for(int i=3;i<l;i++) {
+							
+							log.info("xpath连接 "+s[i]);
+							xpath+="_"+s[i];
+						}
+						
+						log.info("len>3生成新的xpath=>"+xpath);
+						
+					}
+					
+					//回放解析ui前 先pull
+			
+					MyPoint p=pu.getElementPointByXpath(tzm,xpath);
+					
+					if("000".equals(p.getExt())) {
+						log.error("xpath解析成坐标失败 结束本次回放...");
+						return p.getExt2();
+					}
+					args0+=";"+p.getX()+";"+p.getY();
+					
+				}
+				
+				//单条指令回放
+				String b=this.actionPerform(serial, actionName, args0,true,false, sw);
+				
+				//处理wait指令结果回调
+				if(b.contains("wait超时"))
+					return b;
+				
+	
 			}
+			
+			log.info("结束本次回放 正常退出...");
+			msg="结束本次回放 正常退出...";
+			return msg;
+			
+		}
+		else if(isRecording) {
+			
+			//
+			String command=actionName+args;
+			log.info("录制中 接受web端指令=>"+command);
+			RecordUtil ru=new RecordUtil(pu);
+
+			ru.actionRecord(userName, command,serial,sw);
+			this.actionPerform(serial, actionName, args, false,true, sw);
+	
+		}else {
+			
+			this.actionPerform(serial, actionName, args, false,false, sw);
+			
+			
 		}
 		
-		//截图
-		doScreenshot(serial,userName,isPlayBack,isRecording,mode,mode1->true,time);
-		
-		boolean isTouchSupport=touchSupportList.toString().contains(actionName);
-		
-		if(isTouchSupport)
-			TouchActionUtil.perform(serial, actionName, args,sw);
-		else 
-			AdbActionUtil.perform(serial, actionName, args,sw);
-		
-		
+		return msg;
+
 
 	}
 	
-	private void doScreenshot(String serial,String userName,boolean isPlayBack,boolean isRecording,Mode mode,Predicate<Mode> p,String time){
-		
+	private void doScreenshot(String serial,String userName,boolean isPlayBack,boolean isRecording,Mode mode,String time){
+		//非录制模式和回放模式时不做截屏处理
+		if(!isRecording&&!isPlayBack)return;
 
-		//
+		//easy录屏模式不做截屏处理
 	
-		if(isRecording&&p.test(mode)){
-			log.info(String.format("模式不匹配 略过截图操作 当前mode=%s",mode.getType()));
+		if(isRecording&&"easy".equals(mode.getType())){
+			log.info(String.format("Easy模式 略过截图操作 当前mode=%s",mode.getType()));
 			return;
 		}
 		
 		log.info(String.format("准备截图 isRecording=%s isPlayBack=%s mode=%s", isRecording,isPlayBack,mode.getType()));
-		if(!isRecording&&!isPlayBack)return;
-		
+
+		//构建pointer坐标目录
 		int step=RecordUtil.getStep(time);;
 
 		File dir;
@@ -166,7 +254,20 @@ public class ProjectionServiceImpl implements IProjectionService{
 		dir=new File(destLocation);
 		if(!dir.exists())dir.mkdir();
 		
-		if(isRecording&!isPlayBack){
+		
+		//录制模式为strict 时 创建目录
+		if(isRecording&&!isPlayBack&&"strict".equals(mode.getType())){
+			destLocation+=File.separator+"record";
+			dir=new File(destLocation);
+			if(!dir.exists()){
+				dir.mkdir();
+				log.info(String.format("创建 录制目录record %s",destLocation));
+			}
+			
+		}
+		//easy手动截屏触发
+		
+		if(isRecording&&!isPlayBack&&"easy_by_hand".equals(mode.getType())){
 			destLocation+=File.separator+"record";
 			dir=new File(destLocation);
 			if(!dir.exists()){
@@ -176,7 +277,10 @@ public class ProjectionServiceImpl implements IProjectionService{
 			
 		}
 		
-		if(isPlayBack&!isRecording){
+		
+		//构造回放截图目录
+		
+		if(isPlayBack&&!isRecording){
 			
 			destLocation+=File.separator+"playback";
 			dir=new File(destLocation);
@@ -202,7 +306,6 @@ public class ProjectionServiceImpl implements IProjectionService{
 			log.info(String.format("创建回放时间 子目录 %s",destLocation));
 		}
 		destLocation+=File.separator+step+".png";
-		
 		
 		//点击产生图片 服务端保存    easy模式除外
 		IDeviceService deviceService=SpringContextHolder.getBean("deviceService");
@@ -427,11 +530,16 @@ public class ProjectionServiceImpl implements IProjectionService{
 			 * @author: BlackStone
 			 * @time:2017年12月1日下午6:10:33
 			 */
+		log.info("\n\n#################################################\n");
+		log.info("#################################################\n");
+		log.info(String.format("开始回放脚本设备号=%s 脚本id=%s ",serial,recordId));
 		
-		log.info(String.format("回放脚本 %s %s ",serial,recordId));
+		pu=new PageUtil(userDataDir,serial);
+		
+		//pu.rePullUI();
 
-		ru=new RecordUtil();
-		return ru.playback(serial,userName,Integer.valueOf(recordId), sw,time,userDataDir);
+		ru=new RecordUtil(pu);
+		return ru.playback(serial,userName,Integer.valueOf(recordId), sw,time);
 		
 		
 		
@@ -442,7 +550,7 @@ public class ProjectionServiceImpl implements IProjectionService{
 	/* (non-Javadoc)
 	 * @see auto.provider.service.IProjectionService#actionRecord()
 	 */
-	public void actionRecord(String serial,String userName,String command) {
+	public void actionRecord(String serial,String userName,String command,String sw) {
 			/**
 			 * @Description:TODO
 			 * @param 
@@ -451,7 +559,7 @@ public class ProjectionServiceImpl implements IProjectionService{
 			 */
 		
 
-		new RecordUtil().actionRecord(userName, command);
+		new RecordUtil(pu).actionRecord(userName, command,serial,sw);
 
 		
 
@@ -471,7 +579,18 @@ public class ProjectionServiceImpl implements IProjectionService{
 
 		String screenshotLocation=userDataDir+File.separator+userName+File.separator+"pointer"
 				+File.separator+"record"+File.separator+time;
-		new RecordUtil().stop(userName, recordName, tip,method,screenshotLocation);
+		new RecordUtil(pu).stop(userName, recordName, tip,method,screenshotLocation);
+	}
+	
+	public List<String> getCurrentRecord(String userName,String serial){
+		
+		
+		pu=new PageUtil(userDataDir,serial);
+		List<String> list=new RecordUtil(pu).getCommands(userName);
+		if(list!=null)
+			log.info("records=>"+list.toString());
+		return list;
+		
 	}
 	
 	private void killProcesses(String serial){
@@ -551,7 +670,78 @@ public class ProjectionServiceImpl implements IProjectionService{
 			 * @time:2018年3月20日下午3:40:58
 			 */
 		
-		this.doScreenshot(serial, userName, isPlayBack, isRecording, mode,mode1->false, time);
+		this.doScreenshot(serial, userName, isPlayBack, isRecording, mode, time);
+	}
+	
+	
+	
+	public String actionPerform(String serial,String actionName,String args,boolean isPlayBack,boolean isRecording,String sw) {
+		
+		if(isPlayBack) {
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		
+		//录制状态碰到wait指令  这时直接返回
+		
+		if("wait".equals(actionName)&&isRecording) {
+			
+			return "";
+		}
+		
+		//回放状态 碰到wait指令 需执行
+		if("wait".equals(actionName)&&isPlayBack) {
+			
+			//log.info("传参 args="+args);
+			String express=args.split(";")[1];
+			
+			log.info("wait组件 express="+express);
+			
+			boolean g=pu.waitElement(express, serial, userDataDir);
+			int index=express.indexOf("//node");
+			String xpath=express.substring(index);
+			
+			return g?"":"wait超时 xpath="+xpath;
+		}
+		
+		boolean isTouchSupport=touchSupportList.toString().contains(actionName);
+		
+		if(isTouchSupport) {
+			TouchActionUtil.perform(serial, actionName, args,sw,isPlayBack);
+			
+			
+		}
+			
+		else 
+			AdbActionUtil.perform(serial, actionName, args,sw,isPlayBack);
+		
+		//进行校准
+		
+	    PageUtil.proof(serial,500);
+	    
+	    //冲啦页面
+	    
+		pu=new PageUtil(userDataDir,serial);
+		pu.rePullUI();
+		
+		
+		return "";
+		
+	}
+
+
+
+	public boolean delUserRecordLast(String userName, String serial) {
+		// TODO Auto-generated method stub
+		pu=new PageUtil(userDataDir,serial);
+		return new RecordUtil(pu).delUserRecordLast(userName);
+		
+
 	}
 
 	

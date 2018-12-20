@@ -32,6 +32,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 
 import com.provider.util.Md5Util;
+import com.provider.util.PageUtil;
+import com.provider.util.UpdateUI;
 
 import auto.provider.dao.DeviceMapper;
 import auto.provider.model.AdbConnector;
@@ -189,31 +191,34 @@ public class DeviceServiceImpl implements IDeviceService{
 		
 		Set<String> keys=ju.getKeys("device_*");
 		for(String k:keys){
+			
 			String serial=k.split("_")[1];
 			Device device=deviceMapper.selectByPrimaryKey(serial);
 			if(null==device){
 				deviceMapper.insert((Device)rc.getCache(k));
-				log.info(String.format("=db设备信息同步完成 _insert serial=%s 开始设备projection初始化",serial));
+				log.debug(String.format("=db设备信息同步完成 _insert serial=%s 开始设备projection初始化",serial));
 				
 				
 				//新连入设备投影初始化
 				projectionService.deviceProjectionInit(serial);
 				
+				//
+				
+				//触发 accessibilityService dump 更新UI层级文件
+//				UpdateUI u=new UpdateUI(serial);
+//				
+//				new Thread(u).start();
+				
 				
 			}
 			else{
 				deviceMapper.updateByPrimaryKey((Device) rc.getCache(k));	
-				log.info(String.format("=db设备信息同步完成_update serial=%s",serial));
+				log.debug(String.format("=db设备信息同步完成_update serial=%s",serial));
 			}
 			
-			//截屏
-//			if(isPowerOff(serial)){
-//				String destLoc=userDataDir+File.separator+".."+File.separator+"basic-data"+File.separator+"jpeg"
-//						+File.separator+serial+".png";
-//				
-//				this.mSaveScreen(serial,destLoc);
-//			
-//			}
+			
+			//设备截屏操作
+
 			String destLoc=userDataDir+File.separator+".."+File.separator+"basic-data"+File.separator+"jpeg"
 					+File.separator+serial+".png";
 			
@@ -229,6 +234,8 @@ public class DeviceServiceImpl implements IDeviceService{
 			if(!keys.contains("device_"+d.getSerial()))deviceMapper.deleteByPrimaryKey(d.getSerial());
 			
 		}
+		
+
 		
 		
 
@@ -264,7 +271,7 @@ public class DeviceServiceImpl implements IDeviceService{
 					
 					
 					Device d=rc.getCache("device_"+serial);
-					log.info("=redis设备信息同步 更新node");
+					log.debug("=redis设备信息同步 更新node");
 					//String ip=InetAddress.getLocalHost().getHostAddress();
 					String ip=registerAddress.split(":")[0];
 					String node=String.format("dubbo://%s:%s",ip,callAddressPort);

@@ -47,10 +47,10 @@ public class TaskServiceImpl implements ITaskService{
 			 * @time:2017年9月25日下午2:31:17
 			 */
 		
-		log.info("--批量更新已完成任务状态值-");
+		log.debug("--批量更新已完成任务状态值-");
 		List<Task> taskList=taskMapper.selectRun();
 		
-		log.info("--正在运行中的任务个数 ="+taskList.size());
+		log.debug("--正在运行中的任务个数 ="+taskList.size());
 		int waitCount=0;
 		int passCount=0;
 		int failCount=0;
